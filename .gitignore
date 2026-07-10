@@ -1,0 +1,20 @@
+# Compiled Object files
+*.o
+*.obj
+
+# Executables
+*.out
+*.exe
+*.dll
+*.so
+
+# Database backup files generated during runtime
+*.txt
+!file1.txt
+!hello.txt
+!README.txt
+
+# IDE / OS Files
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,8 +1,27 @@
+/**
+ * @file    create_db.c
+ * @author  Akshay Ravikiran Mittha
+ * @date    09/07/2026
+ * @brief   Creates and populates the database.
+ * 
+ * @details 
+ * Functions Performed:
+ * - create_database(): Creates and populates the database.
+ * - insert_last(): Inserts the word into the database.
+ */
+
 #include "../include/inverted_search.h"
 
 /* Function to create database */
 int create_database(hash_t *arr, Slist *head)
 {
+    /* Verify if all files are already loaded from the backup. No new files to create. */
+    if (head == NULL)
+    {
+        printf(YELLOW "\nINFO: All files were already loaded from the backup. No new files to create.\n" RESET);
+        return SUCCESS;
+    }
+
     FILE *fp;
     char word[25];
     while(head)
@@ -11,17 +30,16 @@ int create_database(hash_t *arr, Slist *head)
         fp = fopen(head -> file_name, "r");
         if(fp == NULL)
         {
-            perror("ERROR: ");
+            perror(RED "\nINFO: ERROR: " RESET);
             return FAILURE;
         }
         /* Loop until the end of file and word by word separated by space */
-        
         while(fscanf(fp, "%s", word) != EOF)
         {
-            /* Loop to Strip Punctuation Marks */
-            int len = strlen(word);
-            if(len > 0 && !isalnum(word[len - 1]))
-                word[len - 1] = '\0';
+            /* Ignore empty strings caused by stripping standalone punctuation */
+            if (word[0] == '\0')
+                continue; 
+
             /* Loop to Convert Each Char to Lower Case */
             for(int i = 0; word[i]; i++)
                 word[i] = tolower(word[i]);
@@ -29,6 +47,7 @@ int create_database(hash_t *arr, Slist *head)
             /* Function to Insert */
             insert_last(arr, word, head -> file_name);
         }
+        printf(GREEN "\nINFO: Successful: Creation of Database for file: %s\n" RESET, head -> file_name);
         head = head -> link;
         fclose(fp);
     }
@@ -38,7 +57,7 @@ int create_database(hash_t *arr, Slist *head)
 int insert_last(hash_t *arr, char *word, char *file_name)
 {
     /* Get the hash index from the function */
-    int idx = get_hash(word);
+    int idx = get_hash(word[0]);
 
     /* Check if the hash table index is NULL */
     if(arr[idx].main_link == NULL)
@@ -62,6 +81,7 @@ int insert_last(hash_t *arr, char *word, char *file_name)
         mainnode_t *prev_m = NULL; // To keep track of the previous node and to make the links
         while(temp)
         {
+            /* If word is found, break the loop */
             if(strcmp(temp -> word, word) == 0)
                 break;
             prev_m = temp;
@@ -70,8 +90,10 @@ int insert_last(hash_t *arr, char *word, char *file_name)
         /* Word is not Present in the list */
         if(temp == NULL)
         {
+            /* Allocate memory for the main node and sub node */
             mainnode_t *m_node = (mainnode_t *) malloc(sizeof(mainnode_t));
             subnode_t *s_node = (subnode_t *) malloc(sizeof(subnode_t));
+            /* Copy the word and filename */
             strcpy(m_node ->word, word);
             strcpy(s_node -> file_name, file_name);
             m_node ->link = NULL;
@@ -89,6 +111,7 @@ int insert_last(hash_t *arr, char *word, char *file_name)
             subnode_t *prev_f = NULL; // To keep track of the previous node and to make the links
             while(file)
             {
+                /* If filename is found, break the loop */
                 if(strcmp(file -> file_name, file_name) == 0)
                     break;
                 prev_f = file;
@@ -101,7 +124,9 @@ int insert_last(hash_t *arr, char *word, char *file_name)
             /* File name not found */
             else
             {
+                /* Allocate memory for the sub node */
                 subnode_t *s_node = (subnode_t *) malloc(sizeof(subnode_t));
+                /* Copy the word and filename */
                 strcpy(s_node -> file_name, file_name);
                 s_node -> word_count = 1;
                 s_node -> link = NULL;
